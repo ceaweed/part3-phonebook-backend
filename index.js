@@ -1,7 +1,11 @@
 const express = require('express')
+const morgan = require('morgan')
 const app = express()
 
 app.use(express.json())
+app.use(morgan('tiny'))
+
+morgan.token('body', (req) => JSON.stringify(req.body))
 
 let persons = [
     { 
@@ -51,7 +55,7 @@ app.delete('/api/notes/:id', (request, response) => {
 })
 
 // Create a new person to add to the phonebook
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', morgan(':method :url :body'), (request, response) => {
     const body = request.body;
 
     if (!body.name) {
