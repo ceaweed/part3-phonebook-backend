@@ -42,6 +42,14 @@ app.get('/api/persons/:id', (request, response) => {
     }
 })
 
+// Delete a person from phonebook based on id
+app.delete('/api/notes/:id', (request, response) => {
+    const id = Number(request.params.id)
+    persons = persons.filter(person => person.id !== id)
+
+    response.status(204).end()
+})
+
 // Create a new person to add to the phonebook
 app.post('/api/persons', (request, response) => {
     const body = request.body;
