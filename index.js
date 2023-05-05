@@ -1,9 +1,11 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 const app = express()
 
 app.use(express.json())
 app.use(morgan('tiny'))
+app.use(cors())
 
 morgan.token('body', (req) => JSON.stringify(req.body))
 
@@ -47,7 +49,7 @@ app.get('/api/persons/:id', (request, response) => {
 })
 
 // Delete a person from phonebook based on id
-app.delete('/api/notes/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response) => {
     const id = Number(request.params.id)
     persons = persons.filter(person => person.id !== id)
 
@@ -106,7 +108,7 @@ app.get('/info', (request, response) => {
     <p>${new Date()}</p>`)
 })
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
