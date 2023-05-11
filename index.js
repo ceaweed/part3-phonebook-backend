@@ -44,23 +44,44 @@ app.get('/api/persons', (request, response) => {
 })
 
 // Return person based on id
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const person = persons.find(person => person.id === id)
-    if (person) {
-        response.json(person)
-    } else {
-        response.status(404).end()
-    }
+app.get('/api/persons/:id', (request, response, next) => {
+    Person.findById(request.params.id)
+    .then(person => {
+        if (person) {
+            response.json(person)
+        } else {
+            response.status(404).end()
+        }
+    })
+    .catch(error => next(error))
 })
 
 // Delete a person from phonebook based on id
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
-
-    response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndDelete(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => next(error))
 })
+
+// Update a person's number if they already exist based on the id
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body;
+
+    const person = {
+        name: body.name,
+        number: body.number,
+    }
+
+    console.log(`id thing: ${request.params.id}`)
+
+    Person.findByIdAndUpdate(request.params.id, person, { new: true })
+        .then(updatedPerson => {
+            response.json(updatedPerson)
+        })
+        .catch(error => next(error))
+    })
 
 // Create a new person to add to the phonebook
 app.post('/api/persons', morgan(':method :url :body'), (request, response) => {
@@ -104,6 +125,19 @@ const randomId = () => {
     const max = Math.floor(10000)
     return Math.floor(Math.random() * (max - min) + min);
 }
+
+// Create errorHandler middleware
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)
 
 // Return how many people we have info for in phonebook/persons AND the time when request was received
 app.get('/info', (request, response) => {
