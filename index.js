@@ -76,7 +76,7 @@ app.put('/api/persons/:id', (request, response, next) => {
 
     console.log(`id thing: ${request.params.id}`)
 
-    Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true, context: 'query' })
         .then(updatedPerson => {
             response.json(updatedPerson)
         })
@@ -84,12 +84,12 @@ app.put('/api/persons/:id', (request, response, next) => {
     })
 
 // Create a new person to add to the phonebook
-app.post('/api/persons', morgan(':method :url :body'), (request, response) => {
+app.post('/api/persons', morgan(':method :url :body'), (request, response, next) => {
     const body = request.body;
 
-    if (body.name === undefined) {
-        return response.status(400).json({ error: 'name missing'})
-    }
+    // if (body.name === undefined) {
+    //     return response.status(400).json({ error: 'name missing'})
+     //}
 
     if (body.number === undefined) {
         return response.status(400).json({ error: 'number missing'})
@@ -108,9 +108,11 @@ app.post('/api/persons', morgan(':method :url :body'), (request, response) => {
 
    // persons = persons.concat(person)
    
-   person.save().then(savedPerson => {
-    response.json(savedPerson)
-   })
+   person.save()
+    .then(savedPerson => {
+        response.json(savedPerson)
+    })
+    .catch(error => next(error))
 })
 
 // Function to check to see if the persons array already contains a name
@@ -132,6 +134,8 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
     }
 
     next(error)
